@@ -1,0 +1,23 @@
+CHAIN REACTION — THREE LOCAL PLAYERS (NO AI)
+
+1. Extract the entire ZIP.
+2. Install Python 3.10+ if it is not already installed.
+3. Open the ChainReaction folder.
+
+MAC:      Open Terminal here and run: bash start_mac.command
+WINDOWS:  Double-click start_windows.bat
+LINUX:    Run: bash start_linux.sh
+
+The launcher creates .venv and installs the dependencies on first use.
+Then the game works offline. No accounts or API keys are needed.
+
+PLAY: Press Start, then click an empty cell or one of your colour.
+      Red -> Blue -> Green. Three people share one mouse.
+
+TRY A CHAIN: How to play -> Try a cascade example -> click A1 (top left).
+            This replaces the board with fixed, replayed manual moves.
+
+Space = Pause/Resume   . = Step an explosion   U = Undo   F11 = Fullscreen
+
+Read README.md for rules, setup, saved replays, tests and integration notes.
+There are no implemented AI agents. All moves are manual.

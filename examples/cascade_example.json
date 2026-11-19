@@ -1,0 +1,200 @@
+{
+  "format": "chain-reaction-replay",
+  "version": 1,
+  "rules": "fifo-urdl-v1",
+  "created_utc": "2026-11-17T07:09:41.391086+00:00",
+  "config": {
+    "rows": 9,
+    "cols": 6,
+    "players": 3,
+    "move_limit": null,
+    "max_topples": 10000
+  },
+  "moves": [
+    {
+      "row": 0,
+      "col": 0,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 0,
+      "col": 1,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 1,
+      "col": 1,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 1,
+      "col": 0,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 0,
+      "col": 1,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 1,
+      "col": 1,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 1,
+      "col": 0,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 2,
+      "col": 2,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 1,
+      "col": 1,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 4,
+      "col": 1,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 2,
+      "col": 2,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 3,
+      "col": 0,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 4,
+      "col": 1,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 2,
+      "col": 2,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 3,
+      "col": 0,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 4,
+      "col": 1,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 4,
+      "col": 2,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 3,
+      "col": 3,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 6,
+      "col": 2,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 4,
+      "col": 2,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 3,
+      "col": 3,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 6,
+      "col": 2,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 4,
+      "col": 2,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 3,
+      "col": 3,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 4,
+      "col": 4,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 7,
+      "col": 3,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 6,
+      "col": 1,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 4,
+      "col": 4,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 7,
+      "col": 3,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 6,
+      "col": 1,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 7,
+      "col": 0,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 7,
+      "col": 3,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 6,
+      "col": 1,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 7,
+      "col": 0,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 8,
+      "col": 0,
+      "turn_seconds": 0.0
+    },
+    {
+      "row": 8,
+      "col": 5,
+      "turn_seconds": 0.0
+    }
+  ],
+  "result": {
+    "status": "playing",
+    "winner": null,
+    "reason": ""
+  }
+}

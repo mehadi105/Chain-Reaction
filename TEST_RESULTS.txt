@@ -1,0 +1,68 @@
+Validation of the delivered game-only build
+
+test_instant_matches_normal (test_controller_render.ControllerTests.test_instant_matches_normal) ... ok
+test_keyboard_placement (test_controller_render.ControllerTests.test_keyboard_placement) ... ok
+test_modal_blocks_play_and_clock (test_controller_render.ControllerTests.test_modal_blocks_play_and_clock) ... ok
+test_pause_blocks_placement (test_controller_render.ControllerTests.test_pause_blocks_placement) ... ok
+test_pause_freezes_cascade (test_controller_render.ControllerTests.test_pause_freezes_cascade) ... ok
+test_pause_freezes_timer (test_controller_render.ControllerTests.test_pause_freezes_timer) ... ok
+test_reset_requires_confirmation (test_controller_render.ControllerTests.test_reset_requires_confirmation) ... ok
+test_save_and_load (test_controller_render.ControllerTests.test_save_and_load) ... ok
+test_setup_board_and_draw (test_controller_render.ControllerTests.test_setup_board_and_draw) ... ok
+test_start_then_play (test_controller_render.ControllerTests.test_start_then_play) ... ok
+test_step_advances_one_explosion (test_controller_render.ControllerTests.test_step_advances_one_explosion) ... ok
+test_stepping_to_completion (test_controller_render.ControllerTests.test_stepping_to_completion) ... ok
+test_undo_cancels_effect (test_controller_render.ControllerTests.test_undo_cancels_effect) ... ok
+test_all_grid_sizes_cell_hit_testing (test_controller_render.RendererTests.test_all_grid_sizes_cell_hit_testing) ... ok
+test_dialog_does_not_click_through (test_controller_render.RendererTests.test_dialog_does_not_click_through) ... ok
+test_letterbox_coordinate_conversion (test_controller_render.RendererTests.test_letterbox_coordinate_conversion) ... ok
+test_mouse_clicks_start_and_board (test_controller_render.RendererTests.test_mouse_clicks_start_and_board) ... ok
+test_no_accidental_text_overlaps_on_main_screen (test_controller_render.RendererTests.test_no_accidental_text_overlaps_on_main_screen) ... ok
+test_render_all_screens_inside_canvas (test_controller_render.RendererTests.test_render_all_screens_inside_canvas) ... ok
+test_capture_recolours_all_orbs (test_engine.EngineTests.test_capture_recolours_all_orbs) ... ok
+test_cascade_has_deterministic_fifo_targets (test_engine.EngineTests.test_cascade_has_deterministic_fifo_targets) ... ok
+test_chain_example_two_explosions (test_engine.EngineTests.test_chain_example_two_explosions) ... ok
+test_configuration_validation (test_engine.EngineTests.test_configuration_validation) ... ok
+test_default_no_draw_limit (test_engine.EngineTests.test_default_no_draw_limit) ... ok
+test_draw_checked_after_cascade (test_engine.EngineTests.test_draw_checked_after_cascade) ... ok
+test_edge_explosion (test_engine.EngineTests.test_edge_explosion) ... ok
+test_elimination_skip (test_engine.EngineTests.test_elimination_skip) ... ok
+test_elimination_waits_for_all_initial_turns (test_engine.EngineTests.test_elimination_waits_for_all_initial_turns) ... ok
+test_first_turn_protection (test_engine.EngineTests.test_first_turn_protection) ... ok
+test_fuzz_conservation_turns_and_stability (test_engine.EngineTests.test_fuzz_conservation_turns_and_stability) ... ok
+test_illegal_enemy_move_does_not_advance (test_engine.EngineTests.test_illegal_enemy_move_does_not_advance) ... ok
+test_immutable_simulation (test_engine.EngineTests.test_immutable_simulation) ... ok
+test_incremental_matches_headless (test_engine.EngineTests.test_incremental_matches_headless) ... ok
+test_initial_state (test_engine.EngineTests.test_initial_state) ... ok
+test_interior_explosion (test_engine.EngineTests.test_interior_explosion) ... ok
+test_invalid_coordinates (test_engine.EngineTests.test_invalid_coordinates) ... ok
+test_move_limit_draw_is_optional (test_engine.EngineTests.test_move_limit_draw_is_optional) ... ok
+test_no_diagonal_transfer (test_engine.EngineTests.test_no_diagonal_transfer) ... ok
+test_reject_after_win (test_engine.EngineTests.test_reject_after_win) ... ok
+test_repeated_unsettled_state_is_abort (test_engine.EngineTests.test_repeated_unsettled_state_is_abort) ... ok
+test_residual_orbs_not_erased (test_engine.EngineTests.test_residual_orbs_not_erased) ... ok
+test_safety_budget_is_abort_not_draw (test_engine.EngineTests.test_safety_budget_is_abort_not_draw) ... ok
+test_thresholds (test_engine.EngineTests.test_thresholds) ... ok
+test_win_takes_precedence_over_limit (test_engine.EngineTests.test_win_takes_precedence_over_limit) ... ok
+test_winner_does_not_require_full_board (test_engine.EngineTests.test_winner_does_not_require_full_board) ... ok
+test_atomic_file_save_and_load (test_session.SessionTests.test_atomic_file_save_and_load) ... ok
+test_cancel_inflight (test_session.SessionTests.test_cancel_inflight) ... ok
+test_illegal_replay_rejected (test_session.SessionTests.test_illegal_replay_rejected) ... ok
+test_invalid_replay_rejected (test_session.SessionTests.test_invalid_replay_rejected) ... ok
+test_nonfinite_duration_rejected (test_session.SessionTests.test_nonfinite_duration_rejected) ... ok
+test_reject_concurrent_moves (test_session.SessionTests.test_reject_concurrent_moves) ... ok
+test_reject_unfinished_commit_and_save (test_session.SessionTests.test_reject_unfinished_commit_and_save) ... ok
+test_replay_keeps_move_limit (test_session.SessionTests.test_replay_keeps_move_limit) ... ok
+test_replay_roundtrip (test_session.SessionTests.test_replay_roundtrip) ... ok
+test_saved_winner_is_not_trusted (test_session.SessionTests.test_saved_winner_is_not_trusted) ... ok
+test_undo_full_cascade (test_session.SessionTests.test_undo_full_cascade) ... ok
+test_undo_placement (test_session.SessionTests.test_undo_placement) ... ok
+
+----------------------------------------------------------------------
+Ran 57 tests in 0.746s
+
+OK
+
+Real-window integration: Tk adapter under Xvfb passed Start, keyboard counts, keyboard Pause/Resume, board placement, Undo, Help, example loading, Step, undo during cascade, resized pointer mapping and reset/cancel.
+
+Python 3.13.5 / Pillow 12.3.0. pygame-ce could not be installed due to network restrictions; the primary Pygame adapter was syntax-checked, not runtime-tested. No Windows or macOS execution was performed here.
