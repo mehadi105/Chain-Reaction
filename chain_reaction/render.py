@@ -11,6 +11,7 @@ import math
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
+from .agents import AGENT_NAMES
 from .controller import Controller, NAMES, SPEEDS
 from .engine import Cell, EMPTY, Status, critical_mass
 
@@ -332,7 +333,9 @@ class Renderer:
                 self.glow(colour, 66, y+31, 20, 100)
             self.orb(p, 66, y+31, 11, 95 if gone else 255)
             self.text(f"{NAMES[p]}", 88, y+16, 20, colour if not gone else DIM, True)
-            self.text(f"P{p+1}  ·  HUMAN", 88, y+43, 10, MUTED, True)
+            seat = {"human": "HUMAN", "Minimax + alpha-beta": "MINIMAX", "MCTS": "MCTS", "CP-SAT planner": "CP-SAT"}.get(m.seats[p], "HUMAN")
+            self.hits.append(Hit(f"seat:{p}", (84, y + 40, 150, 18)))
+            self.text(f"P{p+1}  ·  {seat}", 88, y+43, 10, GREEN if m.seats[p] != "human" else MUTED, True)
             tag = "OUT" if gone else ("WINNER" if state.winner == p else ("TURN" if active and m.started else "READY"))
             self.text(tag, 314, y+23, 10, colour if not gone else DIM, True, "right")
             self.line(56, y+65, 312)
@@ -341,13 +344,15 @@ class Renderer:
             self.text(f"{totals[p][1]:02d}", 177, y+79, 17, TEXT, True)
             self.label("CELLS", 208, y+83)
         self.box((36, 654, 296, 180))
-        self.label("FUTURE AI AGENTS", 56, 674)
-        self.text("Not implemented in this build", 56, 697, 12, MUTED)
-        for i, txt in enumerate(("Minimax + alpha-beta", "MCTS", "CP-SAT planner")):
-            self.draw.ellipse((57, 731 + i*24, 62, 736 + i*24), fill=DIM)
-            self.text(txt, 73, 727 + i*24, 13, MUTED)
+        self.label("AI AGENTS", 56, 674)
+        self.text("Click a name here, or P1 · HUMAN above.", 56, 697, 12, MUTED)
+        seated = m.seats[m.state.current_player]
+        for i, txt in enumerate(AGENT_NAMES):
+            self.hits.append(Hit(f"agent:{i}", (48, 722 + i * 24, 272, 22)))
+            self.draw.ellipse((57, 731 + i*24, 62, 736 + i*24), fill=GREEN if seated == txt else DIM)
+            self.text(txt, 73, 727 + i*24, 13, GREEN if seated == txt else TEXT)
         self.line(56, 799, 312)
-        self.text("All three seats are manual.", 56, 813, 11, DIM)
+        self.text("Click the same agent again to clear it.", 56, 813, 11, DIM)
 
     def arena(self, m):
         self.box(CENTRE, "#09120e", "#294435", 12)

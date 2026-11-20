@@ -3,7 +3,9 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
+import time
 
+from .agents import AGENT_NAMES, agent_by_name
 from .engine import Config, Event, InvalidMove, Status
 from .session import Session, example_session
 
@@ -35,6 +37,8 @@ class Controller:
         self.draft_limit = self.session.state.config.move_limit
         self.log_scroll = 0
         self.last_saved = ""
+        self.seats = ["human", "human", "human"]
+        self._agents = {name: agent_by_name(name) for name in AGENT_NAMES}
 
     @property
     def state(self):
@@ -102,6 +106,7 @@ class Controller:
         if not self.busy:
             if self.state.status is Status.PLAYING:
                 self.turn_seconds += max(0, dt)
+                self._play_agent_turn()
             return
         duration = DURATIONS[self.speed]
         if duration == 0:
@@ -127,6 +132,50 @@ class Controller:
                 self.progress = 0
                 if self.event is None and tx.done:
                     self.commit()
+
+    def assign_agent(self, index: int) -> None:
+        if self.busy:
+            self.notify("Wait until the chain reaction finishes before changing a seat.")
+            return
+        if not 0 <= index < len(AGENT_NAMES):
+            return
+        name = AGENT_NAMES[index]
+        player = self.state.current_player
+        self._set_seat(player, "human" if self.seats[player] == name else name)
+
+    def toggle_seat(self, player: int) -> None:
+        """Cycle one seat: human, then each agent, then human again."""
+        if self.busy:
+            self.notify("Wait until the chain reaction finishes before changing a seat.")
+            return
+        if not 0 <= player < len(self.seats):
+            return
+        order = ("human",) + AGENT_NAMES
+        try:
+            nxt = order[(order.index(self.seats[player]) + 1) % len(order)]
+        except ValueError:
+            nxt = "human"
+        self._set_seat(player, nxt)
+
+    def _set_seat(self, player: int, name: str) -> None:
+        self.seats[player] = name
+        if name == "human":
+            self.notify(f"{NAMES[player]} is human again.")
+        else:
+            self.notify(f"{NAMES[player]} will play as {name}.")
+
+    def _play_agent_turn(self) -> None:
+        player = self.state.current_player
+        name = self.seats[player] if player < len(self.seats) else "human"
+        agent = self._agents.get(name)
+        if agent is None or self.state.status is not Status.PLAYING:
+            return
+        try:
+            move = agent.choose_move(self.state, time.monotonic() + 0.22)
+            self.place(*move)
+        except (InvalidMove, ValueError) as exc:
+            self.seats[player] = "human"
+            self.notify(f"{name} could not move ({exc}). {NAMES[player]} is human again.", 6)
 
     def step(self) -> None:
         if not self.busy:
@@ -230,6 +279,10 @@ class Controller:
             self.speed = (self.speed + 1) % len(SPEEDS)
         elif action == "counts":
             self.show_counts = not self.show_counts
+        elif action.startswith("agent:"):
+            self.assign_agent(int(action.split(":", 1)[1]))
+        elif action.startswith("seat:"):
+            self.toggle_seat(int(action.split(":", 1)[1]))
 
     def load_session(self, session: Session) -> None:
         self.session = session
