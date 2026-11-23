@@ -85,7 +85,7 @@ def explodes(state, action):
 
 
 class MCTSNode:
-    def _init_(self, state, parent=None, action=None):
+    def __init__(self, state, parent=None, action=None):
         self.state = state
         self.parent = parent
         self.action = action
@@ -178,7 +178,7 @@ def mcts(state, iterations=100):
 class MCTSAgent:
     name = "MCTS"
 
-    def _init_(self, seed=None, rollout_depth=6, iterations=10000):
+    def __init__(self, seed=None, rollout_depth=6, iterations=10000):
         self.seed = seed
         self.rollout_depth = rollout_depth
         self.iterations = iterations
