@@ -304,6 +304,7 @@ class Renderer:
         self.glow(GREEN, 1028, 62, 10, int(70 * pulse))
         self.draw.ellipse((1024, 58, 1032, 66), fill=GREEN)
         self.text("LOCAL MULTIPLAYER", 1042, 56, 11, GREEN, True)
+        self.button("sound", "Sound: on" if m.sound_on else "Sound: off", (848, 45, 148, 36), selected=m.sound_on)
         self.button("help", "How to play", (1232, 43, 172, 40))
         self.line(36, 110, 1404)
 
@@ -551,7 +552,7 @@ class Renderer:
         if m.age < m.message_until:
             self.text(m.message, 36, 867, 13, MUTED, maxw=1368)
         else:
-            self.text("SPACE  pause / resume     .  step     U  undo     H  help     F11  fullscreen", 36, 867, 11, MUTED)
+            self.text("SPACE  pause / resume     .  step     U  undo     H  help     M  sound     F11  fullscreen", 36, 867, 11, MUTED)
         team = "Mynul Hassan Mehadi · 2207105     /     Ahnaf Tajwar · 2207104     /     Al-Amin · 1707055"
         self.text(team, 36, 897, 10, DIM)
         self.text("CSE 3210   /   GAME ENGINE BUILD 01", 1404, 897, 10, DIM, True, "right")

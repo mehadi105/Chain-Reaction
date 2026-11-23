@@ -8,6 +8,7 @@ import time
 from .agents import AGENT_NAMES, agent_by_name
 from .engine import Config, Event, InvalidMove, Status
 from .session import Session, example_session
+from .sound import play, set_muted
 
 NAMES = ("Red", "Blue", "Green")
 SPEEDS = ("Slow", "Normal", "Fast", "Instant")
@@ -38,6 +39,7 @@ class Controller:
         self.log_scroll = 0
         self.last_saved = ""
         self.seats = ["human", "human", "human"]
+        self.sound_on = True
         self.play_mode = "human"
         self.draft_seats = ["human", "human", "human"]
         self.modal = "setup"
@@ -71,13 +73,17 @@ class Controller:
         result = record.result
         if result.state.status is Status.WON:
             self.notify(f"{NAMES[result.state.winner]} wins. All other colours have been eliminated.", 10)
+            play("win", player=result.state.winner or 0)
         elif result.state.status is Status.DRAW:
             self.notify("Move-limit draw. More than one colour remains.", 10)
+            play("draw")
         elif result.state.status is Status.ABORTED:
             self.notify("Cascade safety stop. This is NOT a draw. Undo or reset the match.", 20)
+            play("abort")
         elif result.eliminated_now:
             gone = ", ".join(NAMES[p] for p in result.eliminated_now)
             self.notify(f"{gone} eliminated. Their turns will be skipped.", 5)
+            play("eliminated", player=result.eliminated_now[0])
         elif result.topples:
             self.notify(f"{result.topples} explosions resolved; {result.captures} enemy cells captured.")
         self.autosave()
@@ -99,8 +105,10 @@ class Controller:
             self.selected = (row, col)
             self.focus_cell = None
             self.progress = 0.0
+            play("place", player=self.event.player)
         except InvalidMove as exc:
             self.notify(str(exc))
+            play("deny")
 
     def update(self, dt: float) -> None:
         self.age += max(0, dt)
@@ -122,6 +130,7 @@ class Controller:
                     self.commit()
                     return
                 self.event = tx.advance()
+                self._cue(self.event)
             self.progress = 1.0
             return
         self.progress += min(dt, 0.1) / duration
@@ -133,6 +142,7 @@ class Controller:
             else:
                 self.event = tx.advance()
                 self.progress = 0
+                self._cue(self.event)
                 if self.event is None and tx.done:
                     self.commit()
 
@@ -192,6 +202,7 @@ class Controller:
         else:
             self.event = tx.advance()
             self.progress = 1.0
+            self._cue(self.event)
             if self.event is None and tx.done:
                 self.commit()
 
@@ -238,6 +249,7 @@ class Controller:
         self.paused = False
         bits = [f"{NAMES[index]}: {'human' if seat == 'human' else seat}" for index, seat in enumerate(self.seats)]
         self.notify(f"{'   ·   '.join(bits)}.   {NAMES[self.state.current_player]} to move.", 6)
+        play("start")
 
     def open_new(self) -> None:
         self.draft_board = (self.state.config.rows, self.state.config.cols)
@@ -273,6 +285,7 @@ class Controller:
             self.step()
         elif action == "undo":
             if self.session.undo():
+                play("undo")
                 self.event = None
                 self.progress = 1
                 self.turn_seconds = 0
@@ -293,6 +306,11 @@ class Controller:
             self.draft_board = tuple(map(int, action.split(":")[1:]))
         elif action.startswith("limit:"):
             self.draft_limit = int(action.split(":")[1]) or None
+        elif action == "sound":
+            self.sound_on = not self.sound_on
+            set_muted(not self.sound_on)
+            if self.sound_on:
+                play("tick")
         elif action == "confirm_setup":
             self.confirm_setup()
         elif action.startswith("mode:"):
@@ -349,7 +367,15 @@ class Controller:
         self.example = False
         self.log_scroll = 0
 
+    def _cue(self, event: Event | None) -> None:
+        if event is not None and event.kind == "explode":
+            topples = self.session.transaction.topples if self.session.transaction else 1
+            play("explode", player=event.player, intensity=min(8, topples), hit=event.captures > 0)
+
     def key(self, key: str) -> None:
+        if key == "m":
+            self.action("sound")
+            return
         if key == "escape":
             if self.modal:
                 self.modal = None

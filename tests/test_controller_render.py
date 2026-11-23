@@ -83,6 +83,15 @@ class ControllerTests(unittest.TestCase):
         self.assertFalse(self.m.busy); self.assertIsNone(self.m.event)
         self.assertEqual(self.m.state,before)
 
+    def test_sound_toggle_stays_silent_without_a_window(self):
+        from chain_reaction.sound import play, waveform
+        play("place", player=1)
+        self.assertTrue(waveform("explode", player=2, intensity=3, hit=True).startswith(b"RIFF"))
+        self.m.action("sound")
+        self.assertFalse(self.m.sound_on)
+        self.m.key("m")
+        self.assertTrue(self.m.sound_on)
+
     def test_keyboard_placement(self):
         self.m.key('enter'); self.m.key('right'); self.m.key('enter'); self.resolve()
         self.assertEqual(self.m.state.cell(0,1).owner,0)

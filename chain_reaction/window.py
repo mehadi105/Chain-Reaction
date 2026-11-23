@@ -4,6 +4,7 @@ import time
 from .controller import Controller
 from .engine import Status
 from .render import Renderer, WIDTH, HEIGHT, scaled_frame, to_logical, viewport
+from .sound import enable
 
 
 def _open_screen(size, flags):
@@ -49,6 +50,7 @@ def _cursor(model: Controller, renderer: Renderer, mouse):
 def run_pygame(model: Controller, renderer: Renderer, size=(1366, 873), frames=0):
     import pygame
     pygame.display.init()
+    enable()
     desktop = pygame.display.get_desktop_sizes()[0]
     initial = (min(size[0], max(640, desktop[0]-80)), min(size[1], max(480, desktop[1]-160)))
     screen = _open_screen(initial, pygame.RESIZABLE)
@@ -190,4 +192,5 @@ class TkWindow:
 
 
 def run_tk(model,renderer,size=(1366,873),frames=0):
+    enable()
     TkWindow(model,renderer,size).run(frames)
