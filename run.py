@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Launch the local game. No agents, network services or API keys required."""
+"""Launch the local game. Seats are chosen at the start: human, AI, or mixed."""
 from __future__ import annotations
 import argparse
 import os
@@ -9,7 +9,7 @@ os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT","1")
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Chain Reaction: three human players, no AI")
+    parser = argparse.ArgumentParser(description="Chain Reaction: human, AI, or mixed seats")
     parser.add_argument("--backend",choices=("auto","pygame","tk"),default="auto")
     parser.add_argument("--example",action="store_true",help="Load a fixed, legal cascade teaching position")
     parser.add_argument("--replay",type=Path,help="Load and validate a saved match")
@@ -58,7 +58,7 @@ def main() -> int:
             except ImportError:
                 backend="tk"
                 print("pygame-ce not installed; using the shared-renderer Tk fallback.")
-        print(f"Chain Reaction: 3 local human players | backend={backend} | no AI")
+        print(f"Chain Reaction: choose human, AI, or mixed seats | backend={backend}")
         (run_pygame if backend=="pygame" else run_tk)(model,renderer,size,args.frames)
         return 0
     except (OSError,ValueError,ImportError) as exc:

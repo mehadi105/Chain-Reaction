@@ -22,7 +22,7 @@ def main():
             ox,oy,w,h=viewport(window.size())
             window.canvas.event_generate('<Button-1>',x=round(ox+x*w/WIDTH),y=round(oy+y*h/HEIGHT))
             window.root.update()
-        click(462,804)
+        click(960,670)
         assert model.started,'Start button failed'
         window.root.focus_force();window.root.update()
         window.root.event_generate('<KeyPress>',keysym='c');window.root.update()

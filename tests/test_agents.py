@@ -52,8 +52,9 @@ class AgentTests(unittest.TestCase):
     def test_seated_agent_plays_a_move(self):
         match = Controller(Config(rows=3, cols=3))
         match.storage_enabled = False
-        match.seats[0] = "Minimax + alpha-beta"
-        match.action("startpause")
+        match.draft_seats[0] = "Minimax + alpha-beta"
+        match.play_mode = "mixed"
+        match.action("confirm_setup")
         match.update(0.01)
         self.assertTrue(match.busy)
         self.assertEqual(match.session.transaction.player, 0)
@@ -78,6 +79,35 @@ class AgentTests(unittest.TestCase):
         self.assertEqual(match.seats[0], "MCTS")
         match.action("agent:1")
         self.assertEqual(match.seats, ["human", "human", "human"])
+
+    def test_setup_chooses_human_ai_or_mixed(self):
+        human = Controller()
+        human.storage_enabled = False
+        self.assertEqual(human.modal, "setup")
+        human.action("confirm_setup")
+        self.assertTrue(human.started)
+        self.assertEqual(human.seats, ["human", "human", "human"])
+
+        ai = Controller()
+        ai.storage_enabled = False
+        ai.action("mode:ai")
+        self.assertEqual(ai.draft_seats, ["Minimax + alpha-beta", "MCTS", "CP-SAT planner"])
+        ai.action("setup-seat:1")
+        self.assertEqual(ai.draft_seats[1], "CP-SAT planner")
+        ai.action("confirm_setup")
+        self.assertEqual(ai.seats[0], "Minimax + alpha-beta")
+        self.assertEqual(ai.seats[1], "CP-SAT planner")
+        self.assertNotEqual(ai.seats[2], "human")
+
+        mixed = Controller()
+        mixed.storage_enabled = False
+        mixed.action("mode:mixed")
+        mixed.action("setup-seat:2")
+        self.assertEqual(mixed.draft_seats, ["human", "human", "Minimax + alpha-beta"])
+        mixed.action("mode:human")
+        mixed.action("setup-seat:0")
+        mixed.action("confirm_setup")
+        self.assertEqual(mixed.seats, ["human", "human", "human"])
 
 
 if __name__ == "__main__":

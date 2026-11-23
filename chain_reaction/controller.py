@@ -27,7 +27,7 @@ class Controller:
         self.speed = 1
         self.turn_seconds = 0.0
         self.age = 0.0
-        self.message = "Press Start, then choose an empty cell."
+        self.message = "Choose who plays, then start the match."
         self.message_until = 8.0
         self.selected: tuple[int, int] | None = None
         self.focus_cell: tuple[int, int] | None = None
@@ -38,6 +38,9 @@ class Controller:
         self.log_scroll = 0
         self.last_saved = ""
         self.seats = ["human", "human", "human"]
+        self.play_mode = "human"
+        self.draft_seats = ["human", "human", "human"]
+        self.modal = "setup"
         self._agents = {name: agent_by_name(name) for name in AGENT_NAMES}
 
     @property
@@ -192,6 +195,50 @@ class Controller:
             if self.event is None and tx.done:
                 self.commit()
 
+    def open_setup(self) -> None:
+        self.draft_seats = list(self.seats)
+        self.play_mode = self._mode_of(self.draft_seats)
+        self.modal = "setup"
+
+    def _mode_of(self, seats) -> str:
+        humans = sum(seat == "human" for seat in seats)
+        if humans == len(seats):
+            return "human"
+        if humans == 0:
+            return "ai"
+        return "mixed"
+
+    def set_play_mode(self, mode: str) -> None:
+        if mode not in ("human", "ai", "mixed"):
+            return
+        self.play_mode = mode
+        if mode == "human":
+            self.draft_seats = ["human", "human", "human"]
+        elif mode == "ai":
+            self.draft_seats = [
+                seat if seat in AGENT_NAMES else AGENT_NAMES[index]
+                for index, seat in enumerate(self.draft_seats)
+            ]
+
+    def cycle_setup_seat(self, player: int) -> None:
+        if self.play_mode == "human" or not 0 <= player < len(self.draft_seats):
+            return
+        order = AGENT_NAMES if self.play_mode == "ai" else ("human",) + AGENT_NAMES
+        current = self.draft_seats[player]
+        try:
+            nxt = order[(order.index(current) + 1) % len(order)]
+        except ValueError:
+            nxt = order[0]
+        self.draft_seats[player] = nxt
+
+    def confirm_setup(self) -> None:
+        self.seats = list(self.draft_seats)
+        self.modal = None
+        self.started = True
+        self.paused = False
+        bits = [f"{NAMES[index]}: {'human' if seat == 'human' else seat}" for index, seat in enumerate(self.seats)]
+        self.notify(f"{'   ·   '.join(bits)}.   {NAMES[self.state.current_player]} to move.", 6)
+
     def open_new(self) -> None:
         self.draft_board = (self.state.config.rows, self.state.config.cols)
         self.draft_limit = self.state.config.move_limit
@@ -218,8 +265,7 @@ class Controller:
             if self.state.status is not Status.PLAYING and not self.busy:
                 self.open_new()
             elif not self.started:
-                self.started = True
-                self.notify("Red to move. Choose an empty cell or one you own.")
+                self.open_setup()
             else:
                 self.paused = not self.paused
                 self.notify("Paused. Step advances one explosion." if self.paused else "Match resumed.")
@@ -247,6 +293,12 @@ class Controller:
             self.draft_board = tuple(map(int, action.split(":")[1:]))
         elif action.startswith("limit:"):
             self.draft_limit = int(action.split(":")[1]) or None
+        elif action == "confirm_setup":
+            self.confirm_setup()
+        elif action.startswith("mode:"):
+            self.set_play_mode(action.split(":", 1)[1])
+        elif action.startswith("setup-seat:"):
+            self.cycle_setup_seat(int(action.split(":", 1)[1]))
         elif action == "help":
             self.modal = "help"
         elif action == "load":
@@ -306,7 +358,7 @@ class Controller:
             return
         if self.modal:
             if key == "enter":
-                mapping = {"new": "confirm_new", "reset": "confirm_reset", "load": "confirm_load"}
+                mapping = {"new": "confirm_new", "reset": "confirm_reset", "load": "confirm_load", "setup": "confirm_setup"}
                 if self.modal in mapping:
                     self.action(mapping[self.modal])
             return

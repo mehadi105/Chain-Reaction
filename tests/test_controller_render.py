@@ -19,15 +19,15 @@ class ControllerTests(unittest.TestCase):
 
     def test_start_then_play(self):
         self.m.place(0,0); self.assertEqual(self.m.state.move_number,0)
-        self.m.action('startpause'); self.m.place(0,0); self.resolve()
+        self.m.action('confirm_setup'); self.m.place(0,0); self.resolve()
         self.assertEqual(self.m.state.move_number,1)
 
     def test_pause_blocks_placement(self):
-        self.m.action('startpause'); self.m.action('startpause'); self.m.place(0,0)
+        self.m.action('confirm_setup'); self.m.action('startpause'); self.m.place(0,0)
         self.assertFalse(self.m.busy)
 
     def test_pause_freezes_timer(self):
-        self.m.action('startpause'); self.m.update(1)
+        self.m.action('confirm_setup'); self.m.update(1)
         self.m.action('startpause'); self.m.update(2)
         self.assertEqual(self.m.turn_seconds,1)
 
@@ -127,7 +127,7 @@ class RendererTests(unittest.TestCase):
 
     def test_mouse_clicks_start_and_board(self):
         m=Controller();m.storage_enabled=False
-        self.r.render(m);self.r.click(m,(462,804))
+        self.r.render(m);self.r.click(m,(960,670))
         self.assertTrue(m.started)
         self.r.render(m);x,y,s,_,_=self.r.board_geometry(m)
         self.r.click(m,(x+s/2,y+s/2))

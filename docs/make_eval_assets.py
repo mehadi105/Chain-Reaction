@@ -220,7 +220,9 @@ def menu_frames() -> None:
     model = Controller(Config(rows=9, cols=6))
     model.storage_enabled = False
     save_ui("screen-start.png", model)
-    model.action("startpause")
+    model.draft_seats = ["Minimax + alpha-beta", "MCTS", "CP-SAT planner"]
+    model.play_mode = "ai"
+    model.action("confirm_setup")
     model.seats = ["Minimax + alpha-beta", "MCTS", "CP-SAT planner"]
     model.notify("Red: Minimax.  Blue: MCTS.  Green: CP-SAT.")
     save_ui("screen-seated.png", model)
@@ -235,8 +237,9 @@ def record_match() -> dict:
     model.storage_enabled = False
     model.speed = 2
     model.show_counts = True
-    model.action("startpause")
-    model.seats = ["Minimax + alpha-beta", "MCTS", "CP-SAT planner"]
+    model.draft_seats = ["Minimax + alpha-beta", "MCTS", "CP-SAT planner"]
+    model.play_mode = "ai"
+    model.action("confirm_setup")
     model.notify("9×6 board. Red: Minimax. Blue: MCTS. Green: CP-SAT.")
     renderer = Renderer()
     saved = 0

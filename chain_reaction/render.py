@@ -309,9 +309,17 @@ class Renderer:
 
     def left_panel(self, m):
         self.box((36, 140, 296, 94))
+        seats = m.draft_seats if m.modal == "setup" else m.seats
+        humans = sum(seat == "human" for seat in seats)
+        if humans == 3:
+            mode_title, mode_note = "Three local players", "One computer. Take turns."
+        elif humans == 0:
+            mode_title, mode_note = "Three AI players", "Each seat has an algorithm."
+        else:
+            mode_title, mode_note = "Human and AI", "People and algorithms share the board."
         self.label("PLAY MODE", 56, 158)
-        self.text("Three local players", 56, 179, 21, TEXT, True)
-        self.text("One computer. Take turns.", 56, 211, 12, MUTED)
+        self.text(mode_title, 56, 179, 21, TEXT, True)
+        self.text(mode_note, 56, 211, 12, MUTED)
         self.label("PLAYERS", 36, 254)
         state = m.state
         board = m.session.board
@@ -333,9 +341,9 @@ class Renderer:
                 self.glow(colour, 66, y+31, 20, 100)
             self.orb(p, 66, y+31, 11, 95 if gone else 255)
             self.text(f"{NAMES[p]}", 88, y+16, 20, colour if not gone else DIM, True)
-            seat = {"human": "HUMAN", "Minimax + alpha-beta": "MINIMAX", "MCTS": "MCTS", "CP-SAT planner": "CP-SAT"}.get(m.seats[p], "HUMAN")
+            seat = {"human": "HUMAN", "Minimax + alpha-beta": "MINIMAX", "MCTS": "MCTS", "CP-SAT planner": "CP-SAT"}.get(seats[p], "HUMAN")
             self.hits.append(Hit(f"seat:{p}", (84, y + 40, 150, 18)))
-            self.text(f"P{p+1}  ·  {seat}", 88, y+43, 10, GREEN if m.seats[p] != "human" else MUTED, True)
+            self.text(f"P{p+1}  ·  {seat}", 88, y+43, 10, GREEN if seats[p] != "human" else MUTED, True)
             tag = "OUT" if gone else ("WINNER" if state.winner == p else ("TURN" if active and m.started else "READY"))
             self.text(tag, 314, y+23, 10, colour if not gone else DIM, True, "right")
             self.line(56, y+65, 312)
@@ -548,12 +556,45 @@ class Renderer:
         self.text(team, 36, 897, 10, DIM)
         self.text("CSE 3210   /   GAME ENGINE BUILD 01", 1404, 897, 10, DIM, True, "right")
 
+    def _setup_dialog(self, m):
+        self.box((340, 136, 760, 704), "#0e1c14", "#41644b", 16)
+        self.draw.line((368, 140, 1072, 140), fill=GREEN, width=3)
+        self.label("MATCH SETUP", 376, 168, GREEN)
+        self.text("Who plays this match?", 376, 194, 28, TEXT, True)
+        notes = {
+            "human": "People take all three seats at this computer.",
+            "ai": "Each colour uses an algorithm. Click a seat to change it.",
+            "mixed": "Click a seat to switch that colour between a person and an algorithm.",
+        }
+        self.text(notes[m.play_mode], 376, 238, 14, MUTED)
+        modes = (("human", "Human"), ("ai", "All AI"), ("mixed", "Mixed"))
+        for index, (mode, caption) in enumerate(modes):
+            self.button(f"mode:{mode}", caption, (376 + index * 232, 276, 216, 44), selected=m.play_mode == mode)
+        self.label("PLAYERS", 376, 348)
+        labels = {"human": "Human", "Minimax + alpha-beta": "Minimax + alpha-beta", "MCTS": "MCTS", "CP-SAT planner": "CP-SAT planner"}
+        for player in range(3):
+            y = 376 + player * 72
+            self.orb(player, 404, y + 22, 12)
+            self.text(NAMES[player], 436, y + 10, 18, COLOURS[player], True)
+            self.button(
+                f"setup-seat:{player}",
+                labels.get(m.draft_seats[player], "Human"),
+                (620, y, 440, 48),
+                enabled=m.play_mode != "human",
+                selected=m.draft_seats[player] != "human",
+            )
+        self.text("Enter starts the match. Escape returns to the board.", 376, 604, 13, DIM)
+        self.button("close", "Cancel", (376, 648, 180, 44))
+        self.button("confirm_setup", "Start match", (860, 648, 200, 44), primary=True)
+
     def dialog(self, m):
         overlay = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 184))
         self.img = Image.alpha_composite(self.img.convert("RGBA"), overlay).convert("RGB")
         self.draw = ImageDraw.Draw(self.img)
         self.hits = []  # background controls cannot receive modal clicks
-        if m.modal == "help":
+        if m.modal == "setup":
+            self._setup_dialog(m)
+        elif m.modal == "help":
             self.box((340, 148, 760, 640), "#0e1c14", "#41644b", 16)
             self.draw.line((368, 152, 1072, 152), fill=GREEN, width=3)
             self.label("THE RULES", 376, 178, GREEN)
@@ -581,7 +622,7 @@ class Renderer:
             self.draw.line((430, 202, 1010, 202), fill=GREEN, width=3)
             self.label("LOCAL MULTIPLAYER", 439, 230, GREEN)
             self.text("Set up a new match", 439, 258, 29, TEXT, True)
-            self.para("Three human players. AI algorithms are not included yet. Starting a new match replaces the current board.", 439, 304, 558, 14)
+            self.para("Starting a new match replaces the current board. Player seats stay as you set them.", 439, 304, 558, 14)
             self.label("BOARD SIZE", 439, 374)
             for i, (r, c, label) in enumerate(((6, 5, "Compact 5 × 6"), (9, 6, "Classic 6 × 9"), (10, 8, "Large 8 × 10"))):
                 self.button(f"board:{r}:{c}", label, (439+i*189, 398, 180, 44), selected=m.draft_board == (r,c))
