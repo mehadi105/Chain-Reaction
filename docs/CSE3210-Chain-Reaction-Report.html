@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CSE 3210 — Chain Reaction Final Project Report</title>
+<style>
+  @page { size: A4; margin: 16mm 16mm 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    font-family: Palatino, "Palatino Linotype", Georgia, serif;
+    color: #1a1f1c; font-size: 12pt; line-height: 1.5;
+  }
+  h1 { font-size: 22pt; line-height: 1.2; margin: 0 0 8px; }
+  h2 { font-size: 16pt; margin: 1.3em 0 0.35em; page-break-after: avoid; }
+  h3 { font-size: 13pt; margin: 1em 0 0.25em; page-break-after: avoid; }
+  p { margin: 0.4em 0 0.7em; }
+  ul, ol { margin: 0.3em 0 0.8em; padding-left: 1.25em; }
+  li { margin: 0.15em 0; }
+  code, pre { font-family: Menlo, Consolas, monospace; font-size: 9.5pt; }
+  code { background: #f3f6f4; padding: 0 0.2em; }
+  pre {
+    background: #f4f7f5; border: 1px solid #d5e0d9; border-radius: 4px;
+    padding: 10px 12px; line-height: 1.4; white-space: pre-wrap;
+    page-break-inside: avoid;
+  }
+  table { width: 100%; border-collapse: collapse; margin: 0.5em 0 0.9em; page-break-inside: avoid; font-size: 11pt; }
+  th, td { border: 1px solid #c5d4cb; padding: 5px 7px; text-align: left; vertical-align: top; }
+  th { background: #e7f3ec; }
+  figure { margin: 0.8em 0 1em; page-break-inside: avoid; }
+  figure img { width: 100%; height: auto; border: 1px solid #d5e0d9; }
+  figcaption { font-size: 10.5pt; color: #3d5146; margin-top: 0.35em; }
+  .cover { min-height: 250mm; page-break-after: always; padding-top: 28mm; }
+  .kicker { letter-spacing: 0.08em; color: #1f6b45; font-size: 12pt; font-weight: 700; }
+  .muted { color: #3d5146; }
+  .chapter { page-break-before: always; }
+  .toc a { color: inherit; text-decoration: none; }
+  .toc li { margin: 0.28em 0; }
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <p class="kicker">CSE 3210 &nbsp;·&nbsp; ARTIFICIAL INTELLIGENCE</p>
+  <h1>Chain Reaction</h1>
+  <p style="font-size:15pt; margin-top:0;">Final project report</p>
+  <p>A deterministic three-player board game, with Minimax and alpha-beta, Monte Carlo tree search, and forward-checking search seated as the three players.</p>
+  <p style="margin-top:2.2em;"><strong>Mynul Hassan Mehadi</strong><br>2207105</p>
+  <p><strong>Ahnaf Tajwar</strong><br>2207104</p>
+  <p><strong>Al-Amin</strong><br>1707055</p>
+  <p class="muted" style="margin-top:2.5em;">20 November 2026</p>
+</section>
+
+<h2>Abstract</h2>
+<p>Chain Reaction is a local three-player game. Each move adds one orb. A corner explodes at two orbs, an edge at three, and an interior cell at four. The explosion converts the orthogonal neighbours and can start another explosion. After all three colours have entered, a colour with no orbs is eliminated. The last colour wins.</p>
+<p>The search procedures come from the laboratory exercises and are adapted to this board. Minimax with alpha-beta deepens until the 0.22-second turn ends and keeps the last finished depth. Monte Carlo tree search revisits at most eight strong moves and plays the most visited one. The third agent is the laboratory forward checker: it assigns a move, reduces the next ply’s domain, and prunes a line once a reply is already worse than a finished move. On one shared position, where the centre cell wins immediately, all three procedures return that cell. Across twelve games on the default 9×6 board, Minimax won seven, MCTS won three, and the forward checker won two.</p>
+
+<h2>Contents</h2>
+<ol class="toc">
+  <li>Introduction</li>
+  <li>Game overview</li>
+  <li>Rules and mechanics</li>
+  <li>Program structure</li>
+  <li>Screenshots</li>
+  <li>Shared search model</li>
+  <li>Minimax and alpha-beta</li>
+  <li>Monte Carlo tree search</li>
+  <li>Forward checking</li>
+  <li>Modifications from the laboratory code</li>
+  <li>Step-by-step decision trace</li>
+  <li>Evaluation</li>
+  <li>Conclusion</li>
+</ol>
+<p class="muted">References follow the conclusion.</p>
+
+<h2 class="chapter">1. Introduction</h2>
+<p>The laboratory exercises implemented Minimax for tic-tac-toe, Monte Carlo tree search for tic-tac-toe, and backtracking with forward checking for the n-queens problem. This project keeps those function names and control flow, and points them at Chain Reaction.</p>
+<p>The board is larger than tic-tac-toe, and there are three players rather than two. A full search of a 9×6 position does not finish inside a turn a person can watch. Each agent therefore has a deadline, a move order, and a rule for what to return when time runs out. The rest of this report states the rules, shows the program, and then follows one position through all three procedures with the values the code actually produced.</p>
+
+<h2 class="chapter">2. Game overview</h2>
+<p>Three players use one computer. Red moves first, then Blue, then Green. In the program they are players 0, 1 and 2. The default board has 9 rows and 6 columns and starts empty. A seat is human unless an agent name is clicked for the player about to move. Clicking the same name again clears that seat.</p>
+<p>There is no network play and no hidden random opponent. Randomness appears only inside MCTS, and only while that agent is choosing. The rules themselves are deterministic: the same board and the same move always produce the same next board.</p>
+<p>The engine stores an immutable <code>State</code>. <code>apply_move</code> resolves the placement and the whole chain, then returns a new state. Search calls that function through <code>result</code> and does not write on the live match.</p>
+
+<h2 class="chapter">3. Rules and mechanics</h2>
+<h3>3.1 A legal placement</h3>
+<p>A move is one integer pair, <code>(row, column)</code>. The chosen cell must be empty, or it must already belong to the player about to move. An opponent’s cell cannot be played on directly. It can only be taken when an explosion reaches it.</p>
+<h3>3.2 Critical mass</h3>
+<p>Neighbours are the cells directly up, right, down and left. Diagonal cells are not neighbours. The critical mass of a cell is its number of neighbours.</p>
+<ul>
+  <li>A corner has 2 neighbours and explodes at 2 orbs.</li>
+  <li>An edge cell has 3 neighbours and explodes at 3 orbs.</li>
+  <li>An interior cell has 4 neighbours and explodes at 4 orbs.</li>
+</ul>
+<h3>3.3 The chain</h3>
+<p>When a cell reaches its critical mass it explodes. One orb is sent to each neighbour. Every orb already on a neighbour, whatever its colour, becomes the exploding player’s colour, and one is added. If that neighbour then reaches its own critical mass, it is queued. The queue is first-in, first-out, so the explosion that started earlier is processed first. The chain stops when no cell is over its critical mass, or when only one colour remains.</p>
+<h3>3.4 Elimination and winning</h3>
+<p>No colour is removed before all three players have taken at least one turn. After that, a colour with no orbs is eliminated and its turns are skipped. The match ends when one colour is left. That colour wins. It does not need to occupy every cell.</p>
+<p>An optional move limit can end a match as a draw. The games in this report do not use that limit. If a chain repeats a state or exhausts the safety budget, the match is aborted. An abort is not recorded as a draw.</p>
+
+<h2 class="chapter">4. Program structure</h2>
+<table>
+  <thead><tr><th>File</th><th>Responsibility</th></tr></thead>
+  <tbody>
+    <tr><td><code>chain_reaction/engine.py</code></td><td>Board, legal moves, explosions, elimination and win test.</td></tr>
+    <tr><td><code>chain_reaction/agents/minimax.py</code></td><td><code>max_value</code>, <code>min_value</code>, <code>minimax</code>, alpha-beta, iterative deepening.</td></tr>
+    <tr><td><code>chain_reaction/agents/mcts.py</code></td><td><code>MCTSNode</code>, <code>ucb1</code>, selection, expansion, simulation, backpropagation.</td></tr>
+    <tr><td><code>chain_reaction/agents/cpsat.py</code></td><td><code>is_safe</code>, <code>forward_check</code>, <code>backtrack_fc</code>, iterative horizon.</td></tr>
+    <tr><td><code>chain_reaction/agents/__init__.py</code></td><td>The three names and <code>agent_by_name</code>.</td></tr>
+    <tr><td><code>chain_reaction/controller.py</code></td><td>Calls <code>choose_move</code> with a 0.22-second deadline, then places the cell.</td></tr>
+    <tr><td><code>chain_reaction/render.py</code></td><td>Draws the arena used in the screenshots and the video.</td></tr>
+  </tbody>
+</table>
+<p>Each agent file repeats <code>player</code>, <code>actions</code>, <code>result</code>, <code>terminal</code> and <code>utility</code>, as the laboratory scripts did. A file can be read on its own. The controller only needs <code>choose_move(state, deadline)</code>, which returns one legal cell.</p>
+
+<h2 class="chapter">5. Screenshots</h2>
+<figure>
+  <img src="figures/screen-start.png" alt="Start screen of the 9 by 6 board">
+  <figcaption>Figure 1. The default match before Start. All three seats are human. The board is 6 columns by 9 rows.</figcaption>
+</figure>
+<figure>
+  <img src="figures/screen-seated.png" alt="Agents seated on an empty board">
+  <figcaption>Figure 2. After Start, Red is seated as Minimax, Blue as MCTS, and Green as the CP-SAT planner. Clicking a player line cycles that seat between human and the three agents. The list below seats whoever is about to move.</figcaption>
+</figure>
+<figure>
+  <img src="figures/match-move-48.png" alt="Forty-eight moves into the 9 by 6 match">
+  <figcaption>Figure 3. Forty-eight moves into the sped-up match on the default 9×6 board. Counts are drawn on the orbs. Red is Minimax, Blue is MCTS, and Green is the forward checker.</figcaption>
+</figure>
+<figure>
+  <img src="figures/match-final.png" alt="Red wins the 9 by 6 match">
+  <figcaption>Figure 4. The same match after 97 moves. Red is the last colour, with 97 orbs on 46 cells. This single game is the recording; Section 12 is the twelve-game comparison.</figcaption>
+</figure>
+
+<h2 class="chapter">6. Shared search model</h2>
+<p>All three agents see the board through the same five operations.</p>
+<pre>player(state)    -> the seat about to move
+actions(state)   -> legal cells, row by row
+result(state, a) -> apply_move(state, a).state
+terminal(state)  -> the match is no longer playing
+utility(state)   -> value for the seat that started the search</pre>
+<p><code>ordered(state)</code> sorts those cells so a move that explodes is tried before a move that only adds an orb, and a fuller cell is tried before an empty one. That order is what makes alpha-beta and the forward checker look at the winning centre before the corners in Section 11.</p>
+<h3>6.1 Utility</h3>
+<p>If the searching player has won, the value is 1. If another colour has won, the value is −1. A draw or an abort is 0. While the match continues, each occupied cell contributes its orb count, plus 3 when the cell is one orb away from exploding. The searching player’s weights are added and the other two players’ weights are subtracted. The total is divided by a limit taken from the whole board, one term of <code>critical mass + 2</code> per cell, and then clamped to the open interval (−0.99, 0.99). A proved win therefore always outranks a merely promising board.</p>
+<p>Three players do not fit the laboratory’s two functions unless two of them share a side. The seat that is searching is the maximizer. The other two seats are both treated as minimizers. This is a paranoid model: it assumes both opponents will choose the reply that hurts the searching player, even when those opponents also compete with each other.</p>
+
+<h2 class="chapter">7. Minimax and alpha-beta</h2>
+<p>The laboratory functions are <code>max_value</code>, <code>min_value</code> and <code>minimax</code>. <code>max_value</code> keeps the largest child value. <code>min_value</code> keeps the smallest. <code>next_value</code> calls <code>max_value</code> when the player to move is the maximizer and <code>min_value</code> otherwise, so two opponent turns in a row both minimize.</p>
+<pre>function max_value(state, alpha, beta, depth):
+    if terminal(state) or depth = 0 or time is up:
+        return utility(state)
+    value &lt;- −infinity
+    for action in ordered(state):
+        value &lt;- max(value, next_value(result(state, action), alpha, beta, depth − 1))
+        if value ≥ beta: return value
+        alpha &lt;- max(alpha, value)
+    return value
+
+function min_value(state, alpha, beta, depth):
+    if terminal(state) or depth = 0 or time is up:
+        return utility(state)
+    value &lt;- +infinity
+    for action in ordered(state):
+        value &lt;- min(value, next_value(result(state, action), alpha, beta, depth − 1))
+        if value ≤ alpha: return value
+        beta &lt;- min(beta, value)
+    return value</pre>
+<p><code>alpha</code> is the best value the maximizer can already force. <code>beta</code> is the best value the minimizer can already force. A maximizing line that reaches <code>beta</code> will be refused by the minimizer above it, so the rest of that line is not generated. A minimizing line that falls to <code>alpha</code> will be refused by the maximizer, so the rest of that line is not generated.</p>
+<p><code>choose_move</code> does not jump to depth 6. It searches depth 1, then 2, and so on up to 6. If a depth is cut short by the clock, that partial result is discarded and the move from the last finished depth is played. On the 9×6 study the finished depth was usually 3.</p>
+
+<h2 class="chapter">8. Monte Carlo tree search</h2>
+<p>A node stores the state, the action that produced it, its children, a visit count, a total value, and the actions not yet expanded. Those unused actions are kept in the same strong-to-weak order as <code>ordered</code>.</p>
+<pre>repeat until the iteration limit or the deadline:
+    node &lt;- selection(root)
+    node &lt;- expansion(node)
+    value &lt;- simulation(node)
+    backpropagation(node, value)
+return the root child with the largest visit count</pre>
+<p>Selection walks down the tree. If the node still has unused actions and fewer than eight children, selection stops there so expansion can add one. Otherwise the maximizer’s node chooses the child with the largest UCB score, and a minimizer’s node chooses the smallest.</p>
+<pre>if visits = 0:  UCB = infinity
+else:           UCB = total_value / visits
+                    + 1.41 * sqrt( ln(parent.visits) / visits )</pre>
+<p>The first term follows the average already seen. The second term gives a rarely visited child another chance. The constant 1.41 is the laboratory value.</p>
+<p>Expansion takes the first unused action, applies <code>result</code>, and stores one prior visit whose value is <code>utility</code> of the new state. Simulation then plays at most six more plies. If any legal cell would explode, the random choice is made among those cells; otherwise it is made among all legal cells. Backpropagation adds the simulation value on the way back to the root and increments every visit count on that path.</p>
+<p>The eight-child limit is the change that makes the search usable on this board. Without it, the first fifty iterations of a 9×6 turn each open a different cell once, and the clock ends before any cell is compared a second time.</p>
+
+<h2 class="chapter">9. Forward checking</h2>
+<p>The third seat is labelled “CP-SAT planner” in the program. The procedure under that label is the laboratory n-queens search: <code>is_safe</code>, <code>forward_check</code> and <code>backtrack_fc</code>. An external CP-SAT solver is not used.</p>
+<p>In n-queens, a row received one column. Here a ply receives one cell. Ply 0 is the move being chosen. Ply 1 is the next player’s reply. The horizon is how many plies are assigned. A domain is the set of cells still legal at that ply.</p>
+<pre>function is_safe(move, state):
+    if terminal(state): return false
+    return the cell is empty or owned by the player to move
+
+function forward_check(move, domains, state):
+    copy the domains
+    if the next ply does not exist: return the copy
+    if state is terminal: next domain &lt;- empty; return the copy
+    next domain &lt;- ordered legal cells of state
+    if next domain is empty: return failure
+    return the copy
+
+function backtrack_fc(ply, horizon, assignment, domains, state):
+    if ply = horizon or (ply &gt; 0 and terminal(state)):
+        record utility(state) as a candidate worst score of assignment[0]
+        if that worst score cannot beat the best finished move:
+            mark the line pruned
+        return
+    for move in the domain of this ply:
+        if time is up: stop
+        if is_safe(move, state):
+            assign move
+            child &lt;- result(state, move)
+            reduced &lt;- forward_check(move, domains, child)
+            if reduced is not a failure:
+                backtrack_fc(ply + 1, horizon, assignment, reduced, child)
+            remove move
+            if this is ply 0 and the move was fully searched:
+                keep it when its worst reply is the best so far
+            if this is a later ply and the line is pruned:
+                stop the remaining replies</pre>
+<p>The n-queens program returned the first complete assignment. That would play the first cell in row order whenever that cell was merely legal. Here every candidate for ply 0 is scored by the worst reply below it, and the candidate with the best such worst reply is kept. <code>choose_move</code> repeats the search at horizon 1, then 2, up to 4, and keeps the last horizon that finished. A proved win, a score of 1, is kept even if later candidates were not reached.</p>
+
+<h2 class="chapter">10. Modifications from the laboratory code</h2>
+<table>
+  <thead><tr><th>Laboratory behaviour</th><th>Behaviour in this project</th></tr></thead>
+  <tbody>
+    <tr><td>Two players, X and O.</td><td>Three players. The searching seat maximises; the other two minimise.</td></tr>
+    <tr><td><code>result</code> writes a mark on a copied grid.</td><td><code>result</code> calls <code>apply_move</code>. The state is immutable, so there is no extra copy.</td></tr>
+    <tr><td>Utility is only +1, −1 or 0 at a terminal position.</td><td>The same terminal values, plus a bounded heuristic while the match continues.</td></tr>
+    <tr><td>Moves are tried from the top left.</td><td>Exploding cells are tried first, then fuller cells.</td></tr>
+    <tr><td>Minimax has no alpha-beta and no depth limit.</td><td>Alpha-beta is inside <code>max_value</code> and <code>min_value</code>. Depth grows from 1 and stops at the deadline.</td></tr>
+    <tr><td>MCTS expands every unused action before it revisits a child.</td><td>A node expands at most eight children. Rollouts prefer explosions. The match budget replaces a fixed small iteration count.</td></tr>
+    <tr><td>Forward checking returns the first safe assignment.</td><td>Every first move is scored by its worst reply. A reply that cannot beat a finished move prunes the rest of that line.</td></tr>
+  </tbody>
+</table>
+
+<h2 class="chapter">11. Step-by-step decision trace</h2>
+<p>This section follows one position from the board, through every legal move, through the heuristic arithmetic, and then through the nodes each agent actually opens. The numbers are the values returned by the program on this position. They are not a sketch of a typical search.</p>
+<p>The board is 3×3. Red is to move. All three players have already taken a turn, so a colour with no orbs can be eliminated. The centre, <code>(1, 1)</code>, holds 3 red orbs. An interior cell explodes at 4. Cell <code>(0, 1)</code> and cell <code>(1, 2)</code> are blue, with one orb each. Cell <code>(1, 0)</code> and cell <code>(2, 1)</code> are green, with one orb each. The four corners are empty. In the window the columns are A, B and C, so the centre is B2.</p>
+<figure>
+  <img src="figures/scenario-before.png" alt="Red to move with three orbs in the centre">
+  <figcaption>Figure 5. The traced position in the game window. Columns are A, B and C. The centre is B2, which is <code>(1, 1)</code> in the engine. Red has 3 orbs in one cell.</figcaption>
+</figure>
+<p>Red has five legal moves: the centre and the four corners. <code>ordered</code> puts the centre first because playing it explodes. The corners follow, each with orb count 0, so they stay in row order: <code>(0, 0)</code>, <code>(0, 2)</code>, <code>(2, 0)</code>, <code>(2, 2)</code>.</p>
+
+<h3>11.1 The five legal moves, in the order the agents try them</h3>
+<p><code>actions</code> lists every empty cell and every cell owned by Red, in row order: <code>(0, 0)</code>, <code>(0, 2)</code>, <code>(1, 1)</code>, <code>(2, 0)</code>, <code>(2, 2)</code>. The enemy cells are absent from that list. <code>ordered</code> then sorts by two keys, both descending, and the sort is stable. The first key is whether the move explodes. The second key is the orb count already in the cell.</p>
+<p>Only <code>(1, 1)</code> explodes: it is Red’s cell, and 3 + 1 meets the interior critical mass of 4. It moves to the front. The four corners have count 0 and do not explode, so they keep the row order they already had. The order every agent uses is therefore:</p>
+<ol>
+  <li><code>(1, 1)</code>, the centre, which explodes.</li>
+  <li><code>(0, 0)</code>, the top-left corner.</li>
+  <li><code>(0, 2)</code>, the top-right corner.</li>
+  <li><code>(2, 0)</code>, the bottom-left corner.</li>
+  <li><code>(2, 2)</code>, the bottom-right corner.</li>
+</ol>
+<p>That order is the whole of the move-ordering idea on this position. The winning cell is tried before any corner, which is what lets alpha-beta and the forward-checking bound cut the corners afterwards.</p>
+
+<h3>11.2 The winning move, neighbour by neighbour</h3>
+<p>Playing <code>(1, 1)</code> is one placement followed by one explosion. The steps are:</p>
+<ol>
+  <li>The centre goes from 3 red orbs to 4. Its critical mass is 4, so it is added to the explosion queue and the placement ends.</li>
+  <li>The centre explodes. Its four orbs leave the cell, one toward each orthogonal neighbour, and the centre is left empty.</li>
+  <li>Up, <code>(0, 1)</code>, held one blue orb. It receives one red orb, so it becomes a red cell of 2. An edge explodes at 3, so this cell does not join the queue.</li>
+  <li>Right, <code>(1, 2)</code>, was also one blue orb. It becomes red with 2 and does not explode.</li>
+  <li>Left, <code>(1, 0)</code>, was one green orb. It becomes red with 2 and does not explode.</li>
+  <li>Down, <code>(2, 1)</code>, was one green orb. It becomes red with 2 and does not explode.</li>
+  <li>The queue is empty. The chain stops after one burst and four captures. Red has 8 orbs on 4 cells. Blue has 0. Green has 0.</li>
+  <li>Both opponents have already entered the match, and neither has an orb, so both are eliminated. Red is the last colour. <code>terminal</code> is true and <code>utility</code> for Red is 1.</li>
+</ol>
+<p>There is no reply under a finished game. A search that reaches this child returns 1 and does not call the opponent’s move generator.</p>
+<figure>
+  <img src="figures/scenario-after.png" alt="Red wins after playing the centre">
+  <figcaption>Figure 6. After Red plays B2. The move log records one burst and four captures. Red has 8 orbs on 4 cells. Blue and Green are out.</figcaption>
+</figure>
+
+<h3>11.3 The heuristic, cell by cell</h3>
+<p>A finished win is 1 and a finished loss is −1. An unfinished board uses a score that is forced to stay inside −0.99 to 0.99, so it can never outrank a real win. For each occupied cell the weight is the orb count, plus 3 when the cell is one orb away from exploding (<code>count &gt;= critical mass − 1</code>). Red’s weights are added. Every other colour’s weights are subtracted. The limit is the same for every position on this board: each cell contributes <code>critical mass + 2</code>, whether or not it is occupied.</p>
+<table>
+  <thead><tr><th>Cells</th><th>Critical mass</th><th>Each contributes</th><th>Subtotal</th></tr></thead>
+  <tbody>
+    <tr><td>Four corners</td><td>2</td><td>4</td><td>16</td></tr>
+    <tr><td>Four edges</td><td>3</td><td>5</td><td>20</td></tr>
+    <tr><td>Centre</td><td>4</td><td>6</td><td>6</td></tr>
+    <tr><td>Whole board</td><td></td><td></td><td>42</td></tr>
+  </tbody>
+</table>
+<p>Playing <code>(0, 0)</code> does not explode anything. The new corner is a red cell of 1 on a critical mass of 2, so it is a threat and its weight is 1 + 3 = 4. The centre is still 3 red orbs on a critical mass of 4, so its weight is 3 + 3 = 6. Each enemy cell is a single orb that is not yet a threat.</p>
+<table>
+  <thead><tr><th>Cell</th><th>Owner</th><th>Count</th><th>Critical</th><th>Weight</th><th>Signed</th></tr></thead>
+  <tbody>
+    <tr><td>(0, 0)</td><td>Red</td><td>1</td><td>2</td><td>1 + 3</td><td>+4</td></tr>
+    <tr><td>(1, 1)</td><td>Red</td><td>3</td><td>4</td><td>3 + 3</td><td>+6</td></tr>
+    <tr><td>(0, 1)</td><td>Blue</td><td>1</td><td>3</td><td>1</td><td>−1</td></tr>
+    <tr><td>(1, 2)</td><td>Blue</td><td>1</td><td>3</td><td>1</td><td>−1</td></tr>
+    <tr><td>(1, 0)</td><td>Green</td><td>1</td><td>3</td><td>1</td><td>−1</td></tr>
+    <tr><td>(2, 1)</td><td>Green</td><td>1</td><td>3</td><td>1</td><td>−1</td></tr>
+  </tbody>
+</table>
+<p>The signed sum is +4 + 6 − 1 − 1 − 1 − 1 = 6. Divided by the limit, 6 / 42 = 0.1429. This is the value of the position immediately after Red’s corner move, before Blue answers. The same 0.1429 is the value after any of the other three corners: each of those moves adds one threatened red corner and changes nothing else.</p>
+
+<h3>11.4 Blue’s first reply, and why every corner is worth 0.0476</h3>
+<p>At depth 2 the opponent still moves. From the position after <code>(0, 0)</code>, Blue has five legal cells. None of them explodes, because Blue’s two cells hold one orb and an edge explodes at 3. <code>ordered</code> therefore falls through to the orb count. <code>(0, 1)</code> and <code>(1, 2)</code> both have count 1, and the stable sort leaves the earlier row-major cell first. The first reply is <code>(0, 1)</code>.</p>
+<p>Adding one orb there changes only that cell. Its count goes from 1 to 2. Its critical mass is 3, so it becomes a threat. The weight changes from 1 to 2 + 3 = 5, and the signed contribution changes from −1 to −5. Every other row of the table above is unchanged. The score falls by 4, from 6 to 2. The limit is still 42. The value is 2 / 42 = 0.0476.</p>
+<table>
+  <thead><tr><th>Cell</th><th>After Blue plays (0, 1)</th><th>Signed</th></tr></thead>
+  <tbody>
+    <tr><td>(0, 0)</td><td>Red, 1 orb, critical 2, threat</td><td>+4</td></tr>
+    <tr><td>(0, 1)</td><td>Blue, 2 orbs, critical 3, threat</td><td>−5</td></tr>
+    <tr><td>(1, 0)</td><td>Green, 1 orb, critical 3</td><td>−1</td></tr>
+    <tr><td>(1, 1)</td><td>Red, 3 orbs, critical 4, threat</td><td>+6</td></tr>
+    <tr><td>(1, 2)</td><td>Blue, 1 orb, critical 3</td><td>−1</td></tr>
+    <tr><td>(2, 1)</td><td>Green, 1 orb, critical 3</td><td>−1</td></tr>
+  </tbody>
+</table>
+<p>+4 − 5 − 1 + 6 − 1 − 1 = 2, and 2 / 42 = 0.0476. A full depth-2 search, with no pruning, records this same 0.0476 for all five replies under all four corners. None of those twenty lines wins the game on the next ply. The minimax value of a corner is the minimum of its replies, which is 0.0476. The minimax value of the centre is 1. The root keeps the centre.</p>
+
+<h3>11.5 The tree alpha-beta actually builds</h3>
+<figure>
+  <img src="figures/tree-minimax.png" alt="Minimax tree with the winning move and four cut corners">
+  <figcaption>Figure 7. Depth-2 Minimax with alpha-beta. The centre is scored in full. Each corner is cut after Blue’s first reply.</figcaption>
+</figure>
+<p>The root begins with alpha at negative infinity and beta at positive infinity. Depth is 2, so a root move is followed by one opponent ply and then the heuristic.</p>
+<ol>
+  <li><code>result</code> of <code>(1, 1)</code> is the win in Section 11.2. The child is terminal, so the call returns 1 and never enters <code>min_value</code>. The root stores <code>(1, 1)</code> and raises alpha from −∞ to 1. Beta is still +∞.</li>
+  <li><code>result</code> of <code>(0, 0)</code> is the unfinished corner. It is passed to <code>min_value</code> with alpha 1 and beta +∞. Blue’s first reply, <code>(0, 1)</code>, is not terminal, and the remaining depth is 0, so the call returns the heuristic 0.0476. That value is already less than or equal to alpha, so <code>min_value</code> returns at once. The other four replies under this corner are not generated. The root compares 0.0476 with 1 and does not replace <code>(1, 1)</code>. Alpha stays 1.</li>
+  <li><code>(0, 2)</code> opens the same first reply, <code>(0, 1)</code>, sees 0.0476, and cuts. Four replies are not generated.</li>
+  <li><code>(2, 0)</code> does the same. Four replies are not generated.</li>
+  <li><code>(2, 2)</code> does the same. Four replies are not generated.</li>
+</ol>
+<p>A depth-2 tree with no pruning would apply <code>result</code> 25 times: 5 moves at the root and 5 replies under each of the 4 corners. Alpha-beta applies it 9 times: the 5 root moves, plus one reply under each corner. Sixteen replies are never built. The action returned by <code>minimax</code> is <code>(1, 1)</code>.</p>
+
+<h3>11.6 The same position under MCTS, iteration by iteration</h3>
+<p>The trace uses 40 iterations, rollout depth 4, and seed 1. A match uses the same loop until 0.22 seconds have passed. While the root still has unused moves and fewer than eight children, selection stops at the root and expansion takes the next ordered move. The first five iterations therefore open the five children in the order of Section 11.1. A new child is given one prior visit whose value is <code>utility</code> of the position just created. The rollout then plays, and backpropagation adds that rollout on top of the prior.</p>
+<table>
+  <thead><tr><th>Iteration</th><th>What happens</th><th>Rollout</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Expand <code>(1, 1)</code>. The child is already terminal, so the rollout does not play a further move. The prior is also 1.</td><td>+1</td></tr>
+    <tr><td>2</td><td>Expand <code>(0, 0)</code>. The prior is the corner heuristic 0.1429. The rollout, up to four plies, happens to return a Red win.</td><td>+1</td></tr>
+    <tr><td>3</td><td>Expand <code>(0, 2)</code>. Same prior, 0.1429. The rollout returns a loss for Red.</td><td>−1</td></tr>
+    <tr><td>4</td><td>Expand <code>(2, 0)</code>. The rollout returns a Red win.</td><td>+1</td></tr>
+    <tr><td>5</td><td>Expand <code>(2, 2)</code>. The rollout returns a loss for Red.</td><td>−1</td></tr>
+  </tbody>
+</table>
+<p>After these five iterations every child has two visits: the prior and the rollout. The root has been backed up five times. UCB is the mean plus 1.41 × √(ln(parent visits) / visits). With parent visits 5 and child visits 2, the exploration term is 1.26 for every child, so the means decide the order:</p>
+<table>
+  <thead><tr><th>Child</th><th>Mean after iteration 5</th><th>UCB</th></tr></thead>
+  <tbody>
+    <tr><td>(1, 1)</td><td>1.00</td><td>2.26</td></tr>
+    <tr><td>(0, 0) and (2, 0)</td><td>0.57</td><td>1.84</td></tr>
+    <tr><td>(0, 2) and (2, 2)</td><td>−0.43</td><td>0.84</td></tr>
+  </tbody>
+</table>
+<p>Iteration 6 therefore selects <code>(1, 1)</code> again. Its state is terminal, so selection stops there, expansion does nothing, and the rollout returns 1. The same thing happens on iterations 7 and 8. From iteration 6 to iteration 40 the root has no unused moves, so selection walks by UCB. Of the 40 iterations, 28 select <code>(1, 1)</code> at the root, 7 select <code>(2, 0)</code>, 3 select <code>(0, 0)</code>, and <code>(0, 2)</code> and <code>(2, 2)</code> are selected once each. Those counts include the iteration that created the child. Six of the forty rollouts return −1. The other thirty-four return +1. The root’s backed-up total is 34 − 6 = 28.</p>
+<figure>
+  <img src="figures/tree-mcts.png" alt="MCTS root children with visits and mean values">
+  <figcaption>Figure 8. Root children after 40 iterations. The played move is the child with 29 visits.</figcaption>
+</figure>
+<table>
+  <thead><tr><th>Child</th><th>Visits</th><th>Mean value</th></tr></thead>
+  <tbody>
+    <tr><td>(1, 1)</td><td>29</td><td>1.00</td></tr>
+    <tr><td>(2, 0)</td><td>8</td><td>0.39</td></tr>
+    <tr><td>(0, 0)</td><td>4</td><td>−0.21</td></tr>
+    <tr><td>(0, 2)</td><td>2</td><td>−0.43</td></tr>
+    <tr><td>(2, 2)</td><td>2</td><td>−0.43</td></tr>
+  </tbody>
+</table>
+<p>The visit counts in the figure add to 45, not 40. Each of the five children still carries its one prior visit, and that prior is not a visit of the root. The root itself was backed up once per iteration, so its visit count is 40. The decision rule does not use the mean and it does not use the final UCB. It uses the visit count, so <code>(1, 1)</code> is played. Its mean is also 1: all 28 rollouts that reached it, and its prior, were wins.</p>
+<p>The final UCB values, with the root at 40 visits, show why a rarely visited corner can look competitive without ever catching up. Exploration is large when the visit count is 2:</p>
+<table>
+  <thead><tr><th>Child</th><th>Visits</th><th>Total</th><th>Mean</th><th>UCB</th></tr></thead>
+  <tbody>
+    <tr><td>(1, 1)</td><td>29</td><td>29</td><td>1.00</td><td>1.50</td></tr>
+    <tr><td>(0, 2)</td><td>2</td><td>−0.86</td><td>−0.43</td><td>1.49</td></tr>
+    <tr><td>(2, 2)</td><td>2</td><td>−0.86</td><td>−0.43</td><td>1.49</td></tr>
+    <tr><td>(2, 0)</td><td>8</td><td>3.14</td><td>0.39</td><td>1.35</td></tr>
+    <tr><td>(0, 0)</td><td>4</td><td>−0.86</td><td>−0.21</td><td>1.14</td></tr>
+  </tbody>
+</table>
+<p><code>(0, 2)</code> and <code>(2, 2)</code> finish within 0.02 of the centre on UCB, because they were barely sampled. They do not have more visits. The move played is the child with 29 visits.</p>
+
+<h3>11.7 The same position under forward checking</h3>
+<p><code>choose_move</code> tries horizons 1, 2, 3 and 4, and keeps the last horizon that finishes. On this position horizon 2 is enough to prove the win, and a proved win is accepted immediately.</p>
+<p>At horizon 1 the search assigns only Red’s move. <code>is_safe</code> accepts the centre because Red already owns it. <code>forward_check</code> sees a terminal state and replaces the next ply’s domain with an empty list. The score of that assignment is 1. The bound, which started at −∞, becomes 1, and the saved move becomes <code>(1, 1)</code>. A corner at this horizon scores 0.1429, the value in Section 11.3. That does not beat 1, so the saved move stays the centre.</p>
+<p>At horizon 2 the centre is tried first again. It is still terminal, so it still has no replies, its worst-reply score is still 1, and the bound is still 1. Each corner is then assigned in the ordered list. For <code>(0, 0)</code> the next domain is Blue’s five legal cells. The first of them, <code>(0, 1)</code>, reaches the horizon and scores 0.0476. That worst score is already less than or equal to the bound, so the flag that stops the rest of the line is set. The other four replies are not assigned. The corner’s worst score, 0.0476, does not raise the bound. <code>(0, 2)</code>, <code>(2, 0)</code> and <code>(2, 2)</code> are cut the same way, each after the single reply <code>(0, 1)</code>.</p>
+<p>The move stored for the horizon is <code>(1, 1)</code>. Horizons 3 and 4 cannot improve on a proved win. <code>choose_move</code> returns that cell.</p>
+<p>The three procedures, given this position and enough time to finish it, agree on the cell and disagree on the reason. Minimax compares a terminal 1 with a minimized 0.0476 and cuts sixteen replies. MCTS spends 28 of 40 iterations on the terminal child and plays it because it has 29 visits. Forward checking raises the bound to 1 on the first assignment and then refuses every corner after one reply.</p>
+
+<h2 class="chapter">12. Evaluation</h2>
+<h3>12.1 Twelve games</h3>
+<p>The default 9×6 board was played twelve times, two games for every seating of the three agents. Each turn received the same 0.22 seconds the controller gives during a match. No agent returned an illegal cell, and no agent ran past the deadline. Every game ended with a winner. Games lasted from 90 to 125 moves.</p>
+<table>
+  <thead><tr><th></th><th>Minimax</th><th>MCTS</th><th>Forward checking</th></tr></thead>
+  <tbody>
+    <tr><td>Wins</td><td>7 / 12</td><td>3 / 12</td><td>2 / 12</td></tr>
+    <tr><td>Wins as first / second / third</td><td>3 / 3 / 1</td><td>1 / 2 / 0</td><td>1 / 1 / 0</td></tr>
+    <tr><td>Mean time per move</td><td>219 ms</td><td>216 ms</td><td>219 ms</td></tr>
+    <tr><td>Median time per move</td><td>220 ms</td><td>220 ms</td><td>220 ms</td></tr>
+    <tr><td>Positions examined per move</td><td>about 7,100</td><td>about 4,800</td><td>about 8,800</td></tr>
+    <tr><td>Positions per second</td><td>about 32,700</td><td>about 22,400</td><td>about 40,100</td></tr>
+    <tr><td>Search that usually finished</td><td>depth 3</td><td>8 cells, then revisits</td><td>horizon 3</td></tr>
+  </tbody>
+</table>
+<p>A position, in this table, is one call to <code>result</code> during the choice. It is a trial board, not a cell of the live board. Time does not separate the agents: all three use the turn they are given. The forward checker builds the most trial boards per second because it does not play random games. MCTS builds fewer, because part of each iteration is a rollout. Minimax builds fewer than the forward checker as well, but every value it keeps is the alpha-beta value of a finished depth. That is the practical difference behind the seven wins.</p>
+<h3>12.2 The sped-up recording</h3>
+<p>Each player card is a human/AI control. Clicking <code>P1 · HUMAN</code> cycles that seat through Minimax, MCTS, the forward checker, and back to human. The list under the cards still seats the player about to move, and clicking the seated name again returns that player to human. The recording uses the default 9×6 board, with the animation set to Fast and the frames played at 24 per second. The file is <code>docs/Chain-Reaction-Gameplay-9x6.mp4</code> and it is embedded in the slide deck. Red was Minimax, Blue was MCTS, and Green was the forward checker. Red won after 97 moves. Figure 4 is the last frame. One match is not the comparison in Section 12.1. It is the gameplay the evaluation asked to see.</p>
+
+<h2 class="chapter">13. Conclusion</h2>
+<p>The laboratory procedures survive the move from tic-tac-toe and n-queens to Chain Reaction once the successor function is the real chain and the search is willing to stop. The shared utility makes a win strictly better than any heuristic, which is why the centre cell is selected as soon as it is generated. Alpha-beta, the visit limit, and the forward-checking bound are three ways of refusing work that cannot change that decision.</p>
+<p>On the longer board the same deadline produces different strength. A finished three-ply minimax search won seven of the twelve games. Sampling eight promising moves won three. Scoring a three-ply assignment by its worst reply won two. The next improvement that the measurements support is not a faster inner loop. All three agents already fill the clock. It is a better use of the fourth ply, which none of them currently finishes on a 9×6 position.</p>
+
+<h2>References</h2>
+<ol>
+  <li>S. Russell and P. Norvig, <em>Artificial Intelligence: A Modern Approach</em>. Adversarial search, including Minimax and alpha-beta pruning, and Monte Carlo tree search.</li>
+  <li>CSE 3210 laboratory exercise: Minimax for tic-tac-toe (<code>player</code>, <code>actions</code>, <code>result</code>, <code>terminal</code>, <code>utility</code>, <code>max_value</code>, <code>min_value</code>, <code>minimax</code>).</li>
+  <li>CSE 3210 laboratory exercise: Monte Carlo tree search for tic-tac-toe (<code>MCTSNode</code>, <code>ucb1</code>, <code>selection</code>, <code>expansion</code>, <code>simulation</code>, <code>backpropagation</code>).</li>
+  <li>CSE 3210 laboratory exercise: backtracking with forward checking for the n-queens problem (<code>is_safe</code>, <code>forward_check</code>, <code>backtrack_fc</code>).</li>
+</ol>
+
+</body>
+</html>

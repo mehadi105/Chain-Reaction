@@ -1,0 +1,823 @@
+{
+  "board_before": [
+    " .  B1  . ",
+    "G1 R3 B1",
+    " .  G1  . "
+  ],
+  "heuristic_corner": {
+    "parts": [
+      {
+        "cell": [
+          0,
+          0
+        ],
+        "owner": 0,
+        "count": 1,
+        "critical": 2,
+        "threat": true,
+        "weight": 4,
+        "signed": 4
+      },
+      {
+        "cell": [
+          0,
+          1
+        ],
+        "owner": 1,
+        "count": 1,
+        "critical": 3,
+        "threat": false,
+        "weight": 1,
+        "signed": -1
+      },
+      {
+        "cell": [
+          1,
+          0
+        ],
+        "owner": 2,
+        "count": 1,
+        "critical": 3,
+        "threat": false,
+        "weight": 1,
+        "signed": -1
+      },
+      {
+        "cell": [
+          1,
+          1
+        ],
+        "owner": 0,
+        "count": 3,
+        "critical": 4,
+        "threat": true,
+        "weight": 6,
+        "signed": 6
+      },
+      {
+        "cell": [
+          1,
+          2
+        ],
+        "owner": 1,
+        "count": 1,
+        "critical": 3,
+        "threat": false,
+        "weight": 1,
+        "signed": -1
+      },
+      {
+        "cell": [
+          2,
+          1
+        ],
+        "owner": 2,
+        "count": 1,
+        "critical": 3,
+        "threat": false,
+        "weight": 1,
+        "signed": -1
+      }
+    ],
+    "score": 6,
+    "limit": 42,
+    "value": 0.1429
+  },
+  "minimax": {
+    "order": [
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        2,
+        2
+      ]
+    ],
+    "full": [
+      {
+        "move": [
+          1,
+          1
+        ],
+        "terminal": true,
+        "winner": 0,
+        "value": 1,
+        "replies": [],
+        "pruned_after": null
+      },
+      {
+        "move": [
+          0,
+          0
+        ],
+        "terminal": false,
+        "winner": null,
+        "value": 0.0476,
+        "replies": [
+          {
+            "move": [
+              0,
+              1
+            ],
+            "value": 0.0476,
+            "terminal": false,
+            "winner": null,
+            "board": [
+              "R1 B2  . ",
+              "G1 R3 B1",
+              " .  G1  . "
+            ]
+          },
+          {
+            "move": [
+              1,
+              2
+            ],
+            "value": 0.0476,
+            "terminal": false,
+            "winner": null,
+            "board": [
+              "R1 B1  . ",
+              "G1 R3 B2",
+              " .  G1  . "
+            ]
+          },
+          {
+            "move": [
+              0,
+              2
+            ],
+            "value": 0.0476,
+            "terminal": false,
+            "winner": null,
+            "board": [
+              "R1 B1 B1",
+              "G1 R3 B1",
+              " .  G1  . "
+            ]
+          },
+          {
+            "move": [
+              2,
+              0
+            ],
+            "value": 0.0476,
+            "terminal": false,
+            "winner": null,
+            "board": [
+              "R1 B1  . ",
+              "G1 R3 B1",
+              "B1 G1  . "
+            ]
+          },
+          {
+            "move": [
+              2,
+              2
+            ],
+            "value": 0.0476,
+            "terminal": false,
+            "winner": null,
+            "board": [
+              "R1 B1  . ",
+              "G1 R3 B1",
+              " .  G1 B1"
+            ]
+          }
+        ],
+        "board": [
+          "R1 B1  . ",
+          "G1 R3 B1",
+          " .  G1  . "
+        ]
+      },
+      {
+        "move": [
+          0,
+          2
+        ],
+        "terminal": false,
+        "winner": null,
+        "value": 0.0476,
+        "replies": [
+          {
+            "move": [
+              0,
+              1
+            ],
+            "value": 0.0476,
+            "terminal": false,
+            "winner": null,
+            "board": [
+              " .  B2 R1",
+              "G1 R3 B1",
+              " .  G1  . "
+            ]
+          },
+          {
+            "move": [
+              1,
+              2
+            ],
+            "value": 0.0476,
+            "terminal": false,
+            "winner": null,
+            "board": [
+              " .  B1 R1",
+              "G1 R3 B2",
+              " .  G1  . "
+            ]
+          },
+          {
+            "move": [
+              0,
+              0
+            ],
+            "value": 0.0476,
+            "terminal": false,
+            "winner": null,
+            "board": [
+              "B1 B1 R1",
+              "G1 R3 B1",
+              " .  G1  . "
+            ]
+          },
+          {
+            "move": [
+              2,
+              0
+            ],
+            "value": 0.0476,
+            "terminal": false,
+            "winner": null,
+            "board": [
+              " .  B1 R1",
+              "G1 R3 B1",
+              "B1 G1  . "
+            ]
+          },
+          {
+            "move": [
+              2,
+              2
+            ],
+            "value": 0.0476,
+            "terminal": false,
+            "winner": null,
+            "board": [
+              " .  B1 R1",
+              "G1 R3 B1",
+              " .  G1 B1"
+            ]
+          }
+        ],
+        "board": [
+          " .  B1 R1",
+          "G1 R3 B1",
+          " .  G1  . "
+        ]
+      },
+      {
+        "move": [
+          2,
+          0
+        ],
+        "terminal": false,
+        "winner": null,
+        "value": 0.0476,
+        "replies": [
+          {
+            "move": [
+              0,
+              1
+            ],
+            "value": 0.0476,
+            "terminal": false,
+            "winner": null,
+            "board": [
+              " .  B2  . ",
+              "G1 R3 B1",
+              "R1 G1  . "
+            ]
+          },
+          {
+            "move": [
+              1,
+              2
+            ],
+            "value": 0.0476,
+            "terminal": false,
+            "winner": null,
+            "board": [
+              " .  B1  . ",
+              "G1 R3 B2",
+              "R1 G1  . "
+            ]
+          },
+          {
+            "move": [
+              0,
+              0
+            ],
+            "value": 0.0476,
+            "terminal": false,
+            "winner": null,
+            "board": [
+              "B1 B1  . ",
+              "G1 R3 B1",
+              "R1 G1  . "
+            ]
+          },
+          {
+            "move": [
+              0,
+              2
+            ],
+            "value": 0.0476,
+            "terminal": false,
+            "winner": null,
+            "board": [
+              " .  B1 B1",
+              "G1 R3 B1",
+              "R1 G1  . "
+            ]
+          },
+          {
+            "move": [
+              2,
+              2
+            ],
+            "value": 0.0476,
+            "terminal": false,
+            "winner": null,
+            "board": [
+              " .  B1  . ",
+              "G1 R3 B1",
+              "R1 G1 B1"
+            ]
+          }
+        ],
+        "board": [
+          " .  B1  . ",
+          "G1 R3 B1",
+          "R1 G1  . "
+        ]
+      },
+      {
+        "move": [
+          2,
+          2
+        ],
+        "terminal": false,
+        "winner": null,
+        "value": 0.0476,
+        "replies": [
+          {
+            "move": [
+              0,
+              1
+            ],
+            "value": 0.0476,
+            "terminal": false,
+            "winner": null,
+            "board": [
+              " .  B2  . ",
+              "G1 R3 B1",
+              " .  G1 R1"
+            ]
+          },
+          {
+            "move": [
+              1,
+              2
+            ],
+            "value": 0.0476,
+            "terminal": false,
+            "winner": null,
+            "board": [
+              " .  B1  . ",
+              "G1 R3 B2",
+              " .  G1 R1"
+            ]
+          },
+          {
+            "move": [
+              0,
+              0
+            ],
+            "value": 0.0476,
+            "terminal": false,
+            "winner": null,
+            "board": [
+              "B1 B1  . ",
+              "G1 R3 B1",
+              " .  G1 R1"
+            ]
+          },
+          {
+            "move": [
+              0,
+              2
+            ],
+            "value": 0.0476,
+            "terminal": false,
+            "winner": null,
+            "board": [
+              " .  B1 B1",
+              "G1 R3 B1",
+              " .  G1 R1"
+            ]
+          },
+          {
+            "move": [
+              2,
+              0
+            ],
+            "value": 0.0476,
+            "terminal": false,
+            "winner": null,
+            "board": [
+              " .  B1  . ",
+              "G1 R3 B1",
+              "B1 G1 R1"
+            ]
+          }
+        ],
+        "board": [
+          " .  B1  . ",
+          "G1 R3 B1",
+          " .  G1 R1"
+        ]
+      }
+    ],
+    "alpha_beta": [
+      {
+        "move": [
+          1,
+          1
+        ],
+        "terminal": true,
+        "winner": 0,
+        "value": 1,
+        "replies": [],
+        "pruned_after": null,
+        "alpha_beta": "fully scored, sets alpha = 1"
+      },
+      {
+        "move": [
+          0,
+          0
+        ],
+        "value_if_fully_searched": 0.0476,
+        "alpha_beta": "cut off after the first reply",
+        "first_reply": {
+          "move": [
+            0,
+            1
+          ],
+          "value": 0.0476
+        },
+        "replies_not_opened": 4
+      },
+      {
+        "move": [
+          0,
+          2
+        ],
+        "value_if_fully_searched": 0.0476,
+        "alpha_beta": "cut off after the first reply",
+        "first_reply": {
+          "move": [
+            0,
+            1
+          ],
+          "value": 0.0476
+        },
+        "replies_not_opened": 4
+      },
+      {
+        "move": [
+          2,
+          0
+        ],
+        "value_if_fully_searched": 0.0476,
+        "alpha_beta": "cut off after the first reply",
+        "first_reply": {
+          "move": [
+            0,
+            1
+          ],
+          "value": 0.0476
+        },
+        "replies_not_opened": 4
+      },
+      {
+        "move": [
+          2,
+          2
+        ],
+        "value_if_fully_searched": 0.0476,
+        "alpha_beta": "cut off after the first reply",
+        "first_reply": {
+          "move": [
+            0,
+            1
+          ],
+          "value": 0.0476
+        },
+        "replies_not_opened": 4
+      }
+    ]
+  },
+  "mcts": {
+    "iterations": 40,
+    "rollout_depth": 4,
+    "seed": 1,
+    "children": [
+      {
+        "move": [
+          1,
+          1
+        ],
+        "visits": 29,
+        "mean": 1.0,
+        "total": 29
+      },
+      {
+        "move": [
+          0,
+          0
+        ],
+        "visits": 4,
+        "mean": -0.2143,
+        "total": -0.8571
+      },
+      {
+        "move": [
+          0,
+          2
+        ],
+        "visits": 2,
+        "mean": -0.4286,
+        "total": -0.8571
+      },
+      {
+        "move": [
+          2,
+          0
+        ],
+        "visits": 8,
+        "mean": 0.3929,
+        "total": 3.1429
+      },
+      {
+        "move": [
+          2,
+          2
+        ],
+        "visits": 2,
+        "mean": -0.4286,
+        "total": -0.8571
+      }
+    ],
+    "chosen": [
+      1,
+      1
+    ]
+  },
+  "cpsat": {
+    "horizon": 2,
+    "moves": [
+      {
+        "move": [
+          1,
+          1
+        ],
+        "terminal": true,
+        "worst": 1,
+        "replies": []
+      },
+      {
+        "move": [
+          0,
+          0
+        ],
+        "terminal": false,
+        "worst": 0.0476,
+        "best_reply_for_us": 0.0476,
+        "replies": [
+          {
+            "move": [
+              0,
+              1
+            ],
+            "value": 0.0476
+          },
+          {
+            "move": [
+              1,
+              2
+            ],
+            "value": 0.0476
+          },
+          {
+            "move": [
+              0,
+              2
+            ],
+            "value": 0.0476
+          },
+          {
+            "move": [
+              2,
+              0
+            ],
+            "value": 0.0476
+          },
+          {
+            "move": [
+              2,
+              2
+            ],
+            "value": 0.0476
+          }
+        ]
+      },
+      {
+        "move": [
+          0,
+          2
+        ],
+        "terminal": false,
+        "worst": 0.0476,
+        "best_reply_for_us": 0.0476,
+        "replies": [
+          {
+            "move": [
+              0,
+              1
+            ],
+            "value": 0.0476
+          },
+          {
+            "move": [
+              1,
+              2
+            ],
+            "value": 0.0476
+          },
+          {
+            "move": [
+              0,
+              0
+            ],
+            "value": 0.0476
+          },
+          {
+            "move": [
+              2,
+              0
+            ],
+            "value": 0.0476
+          },
+          {
+            "move": [
+              2,
+              2
+            ],
+            "value": 0.0476
+          }
+        ]
+      },
+      {
+        "move": [
+          2,
+          0
+        ],
+        "terminal": false,
+        "worst": 0.0476,
+        "best_reply_for_us": 0.0476,
+        "replies": [
+          {
+            "move": [
+              0,
+              1
+            ],
+            "value": 0.0476
+          },
+          {
+            "move": [
+              1,
+              2
+            ],
+            "value": 0.0476
+          },
+          {
+            "move": [
+              0,
+              0
+            ],
+            "value": 0.0476
+          },
+          {
+            "move": [
+              0,
+              2
+            ],
+            "value": 0.0476
+          },
+          {
+            "move": [
+              2,
+              2
+            ],
+            "value": 0.0476
+          }
+        ]
+      },
+      {
+        "move": [
+          2,
+          2
+        ],
+        "terminal": false,
+        "worst": 0.0476,
+        "best_reply_for_us": 0.0476,
+        "replies": [
+          {
+            "move": [
+              0,
+              1
+            ],
+            "value": 0.0476
+          },
+          {
+            "move": [
+              1,
+              2
+            ],
+            "value": 0.0476
+          },
+          {
+            "move": [
+              0,
+              0
+            ],
+            "value": 0.0476
+          },
+          {
+            "move": [
+              0,
+              2
+            ],
+            "value": 0.0476
+          },
+          {
+            "move": [
+              2,
+              0
+            ],
+            "value": 0.0476
+          }
+        ]
+      }
+    ],
+    "chosen": [
+      1,
+      1
+    ]
+  },
+  "match": {
+    "moves": 41,
+    "status": "won",
+    "winner": "Blue",
+    "frames": 158,
+    "counts": [
+      [
+        0,
+        0
+      ],
+      [
+        41,
+        21
+      ],
+      [
+        0,
+        0
+      ]
+    ]
+  }
+}
